@@ -3,7 +3,7 @@ package spotify
 import (
 	"encoding/json"
 	"errors"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -69,7 +69,7 @@ func (ad *AccessData) GetAccessData() {
 	}
 	defer resp.Body.Close()
 
-	responseBody, err := ioutil.ReadAll(resp.Body)
+	responseBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		log.Printf("client: could not read response body: %s\n", err)
 	}
@@ -86,7 +86,7 @@ func (ad *AccessData) GetAccessData() {
 	ad.ExpiresIn = data.ExpiresIn
 	ad.ReceiveTime = time.Now()
 
-	ioutil.WriteFile("temp_data.json", responseBody, 0600)
+	os.WriteFile("temp_data.json", responseBody, 0600)
 
 }
 
