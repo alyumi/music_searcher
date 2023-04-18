@@ -7,13 +7,20 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/alyumi/music_searcher/config"
 	"github.com/alyumi/music_searcher/spotify/methods"
 )
 
 type Client struct {
-	ad AccessData
-	pd PathData
-	td TrackData
+	ad     AccessData
+	pd     PathData
+	td     TrackData
+	config Config
+}
+
+type Config struct {
+	SPOTIFY_CLIENT_ID     string
+	SPOTIFY_CLIENT_SECRET string
 }
 
 type TrackData struct {
@@ -22,11 +29,13 @@ type TrackData struct {
 	Album  string
 }
 
-func NewClient() *Client {
+func NewClient(config config.Config) *Client {
 
 	client := &Client{
-		ad: AccessData{},
-		pd: PathData{},
+		config: Config{
+			SPOTIFY_CLIENT_ID:     config.SPOTIFY_CLIENT_ID,
+			SPOTIFY_CLIENT_SECRET: config.SPOTIFY_CLIENT_SECRET,
+		},
 	}
 
 	if IsAccessDataValid() {
@@ -34,17 +43,17 @@ func NewClient() *Client {
 		client.ad = *UseTempData()
 	} else {
 		log.Println("Access data not valid or not exists")
-		client.ad.GetAccessData()
+		client.ad.GetAccessData(client.config)
 	}
 
 	return client
 }
 
 func (c Client) GetHeader() http.Header {
-	header := &http.Header{}
+	header := http.Header{}
 	value := c.ad.TokenType + "  " + c.ad.AccessToken
 	header.Add("Authorization", value)
-	return *header
+	return header
 }
 
 func (c Client) parseURL(rawURL string) (*PathData, error) {
@@ -68,7 +77,7 @@ func (c *Client) ReceiveURL(rawURL string) {
 	ans, err := c.parseURL(rawURL)
 
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("Fatal error occured:", err)
 	}
 
 	c.pd.ID = ans.ID
@@ -99,24 +108,11 @@ type Getter interface {
 // Implement
 func (c *Client) ChooseMethod(method string) {
 
-	// v := NewVariant(c.pd.Name, method)
-	// var t, m any
-	// switch v.Name {
-	// case "track":
-	// 	t = v.NewTrack()
-	// }
-
-	// switch v.Method {
-	// case "get":
-	// 	m = v.NewGetter()
-	// }
-	// log.Println(m)
-	// log.Println(t)
-
 	t := &methods.Track{}
 
 	if strings.ToLower(method) == methods.Get {
 		header := c.GetHeader()
+
 		id := c.pd.ID
 		t = t.Get(id, header)
 	}
@@ -127,7 +123,10 @@ func (c *Client) ChooseMethod(method string) {
 	c.td.Album = t.AlbumName.Name
 }
 
-func (c Client) FormSearch() string {
+func (c Client) FormSearch(URL string, method string) string {
+	c.ReceiveURL(URL)
+	c.ChooseMethod(method)
+
 	return c.td.Name + " " + c.td.Artist
 }
 

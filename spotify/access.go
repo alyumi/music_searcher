@@ -9,8 +9,6 @@ import (
 	"os"
 	"strconv"
 	"time"
-
-	"github.com/joho/godotenv"
 )
 
 const (
@@ -34,31 +32,35 @@ type Err struct {
 	Message string `json:"message"`
 }
 
-func (ad *AccessData) GetAccessData() {
-
-	err := godotenv.Load(".env")
-	if err != nil {
-		log.Fatalf("Some error occured. Err: %s", err)
-	}
-
-	var (
-		client        = &http.Client{}
-		client_id     = os.Getenv("SPOTIFY_CLIENT_ID")
-		client_secret = os.Getenv("SPOTIFY_CLIENT_SECRET")
-		grant_type    = "client_credentials"
-	)
-
+func createRequestBody(content_type, grant_type, client_id, client_secret string) *http.Request {
 	req, err := http.NewRequest("POST", accounts_url, nil)
 	if err != nil {
 		log.Println(err)
 	}
 
-	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Add("Content-Type", content_type)
 	q := req.URL.Query()
 	q.Add("grant_type", grant_type)
 	q.Add("client_id", client_id)
 	q.Add("client_secret", client_secret)
 	req.URL.RawQuery = q.Encode()
+
+	return req
+}
+
+func (ad *AccessData) GetAccessData(config Config) {
+
+	var (
+		client        = &http.Client{}
+		client_id     = config.SPOTIFY_CLIENT_ID
+		client_secret = config.SPOTIFY_CLIENT_SECRET
+		grant_type    = "client_credentials"
+		content_type  = "application/x-www-form-urlencoded"
+	)
+
+	// log.Printf("client_id: %s\nclient_secret: %s", client_id, client_secret)
+
+	req := createRequestBody(content_type, grant_type, client_id, client_secret)
 
 	resp, err := client.Do(req)
 	if resp.StatusCode != http.StatusOK {
@@ -134,5 +136,5 @@ func IsAccessDataValid() bool {
 	deadlineTime := accessData.ReceiveTime.Add(time.Duration(accessData.ExpiresIn))
 	deltaDeadline := time.Since(deadlineTime)
 
-	return deltaDeadline > time.Duration(0)
+	return deltaDeadline < time.Minute*5
 }

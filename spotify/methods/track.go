@@ -36,10 +36,10 @@ func (t Track) get(id string, h http.Header) *Track {
 
 	resp, err := client.Do(req)
 	if resp.StatusCode != 200 {
-		log.Fatal(resp.StatusCode)
+		log.Fatal("Error:", err, "Status code:", resp.StatusCode)
 	}
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("Error", err)
 	}
 
 	responseBody, err := io.ReadAll(resp.Body)
