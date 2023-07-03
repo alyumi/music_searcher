@@ -1,28 +1,30 @@
 package main
 
 import (
-	"context"
-	"log"
+	"net/http"
 
-	"github.com/alyumi/music_searcher/config"
-	"github.com/alyumi/music_searcher/spotify"
-	yt "github.com/alyumi/music_searcher/youtube"
+	"github.com/alyumi/music_searcher/app"
+	"github.com/labstack/echo/v4"
 )
 
 func main() {
+	a := app.InitApp()
+	e := echo.New()
+	l := e.StdLogger
+	e.GET("/", func(c echo.Context) error {
+		l.Print("Hello!")
+		return c.File("web/index.html")
+	})
 
-	conf := config.NewConfig()
-	s := spotify.NewClient(*conf)
+	e.GET("/getLinks", func(c echo.Context) error {
 
-	URL := "https://open.spotify.com/track/4r13d29427UZ9lyGrhKjxJ?si=1536726afa7142fc"
-	searchForYoutube := s.FormSearch(URL, "get")
-	var ss []string
-	ss = append(ss, searchForYoutube)
+		URL := c.FormValue("link")
+		l.Println("URL: ", URL)
+		links := a.FindLinks(URL)
+		ULTRA := links[0] + "\n" + links[1] + "\n" + links[2] + "\n" + links[3] + "\n" + links[4]
 
-	searchCall := yt.YoutubeSearchService(context.Background(), *conf, []string(ss))
-	links := yt.GetSearchLinks(searchCall)
+		return c.String(http.StatusOK, ULTRA)
+	})
+	e.Logger.Fatal(e.Start(":1323"))
 
-	for _, link := range links {
-		log.Println(link)
-	}
 }

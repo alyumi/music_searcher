@@ -1,6 +1,7 @@
 package methods
 
 const (
-	Get        = "get"
-	GetSeveral = "get_several"
+	GetTrack         = "get"
+	GetSeveralTracks = "get_several"
+	GetRecomendation = "get_recomendation"
 )

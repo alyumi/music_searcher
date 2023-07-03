@@ -136,5 +136,5 @@ func IsAccessDataValid() bool {
 	deadlineTime := accessData.ReceiveTime.Add(time.Duration(accessData.ExpiresIn))
 	deltaDeadline := time.Since(deadlineTime)
 
-	return deltaDeadline < time.Minute*5
+	return deltaDeadline <= 60*time.Minute
 }

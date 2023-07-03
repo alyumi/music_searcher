@@ -57,6 +57,7 @@ func (c Client) GetHeader() http.Header {
 }
 
 func (c Client) parseURL(rawURL string) (*PathData, error) {
+	log.Print("parsing URL")
 	raw, err := url.Parse(rawURL)
 	if err != nil {
 		log.Println(err)
@@ -73,7 +74,7 @@ func (c Client) parseURL(rawURL string) (*PathData, error) {
 }
 
 func (c *Client) ReceiveURL(rawURL string) {
-
+	log.Print("receiving URL...")
 	ans, err := c.parseURL(rawURL)
 
 	if err != nil {
@@ -110,7 +111,7 @@ func (c *Client) ChooseMethod(method string) {
 
 	t := &methods.Track{}
 
-	if strings.ToLower(method) == methods.Get {
+	if strings.ToLower(method) == methods.GetTrack {
 		header := c.GetHeader()
 
 		id := c.pd.ID
@@ -124,6 +125,7 @@ func (c *Client) ChooseMethod(method string) {
 }
 
 func (c Client) FormSearch(URL string, method string) string {
+	log.Print("Forming search in spotify...")
 	c.ReceiveURL(URL)
 	c.ChooseMethod(method)
 
